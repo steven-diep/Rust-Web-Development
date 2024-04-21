@@ -1,15 +1,16 @@
 use std::io::{Error, ErrorKind};
 use std::str::FromStr;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Question {
-    id: QuestionId,
+    pub id: QuestionId,
     title: String,
     content: String,
     tags: Option<Vec<String>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct QuestionId(pub String);
 
 impl Question {
