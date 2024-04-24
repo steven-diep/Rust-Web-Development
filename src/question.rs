@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Clone, Deserialize)]
 pub struct Question {
     pub id: String,
     pub title: String,

@@ -1,4 +1,5 @@
 mod question;
+mod store;
 
 use axum::{
     http::StatusCode,
@@ -7,12 +8,11 @@ use axum::{
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
-use std::io::{Error, ErrorKind};
 use question::*;
+use store::*;
 use std::{
     collections::HashMap,
     net::{IpAddr, Ipv4Addr, SocketAddr},
-    str::FromStr,
 };
 
 async fn return_error() -> Response {
@@ -40,11 +40,15 @@ async fn get_questions() -> Result<Json<Question>, (StatusCode, String)> {
 
 #[tokio::main]
 async fn main() {
+    // Create an in-memory database
+    let store = Store::new();
+
     // Create an app with a handler for questions
     // Fallback calls the error handler if the route cannot be found
     let app = Router::new()
         .route("/questions", get(get_questions))
-        .fallback(return_error);
+        .fallback(return_error)
+        .with_state(store);
 
     // Host the app on localhost:3000
     let ip = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 3000);
