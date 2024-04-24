@@ -6,9 +6,11 @@ use axum::{
     routing::get,
     Json, Router,
 };
-
+use serde::{Deserialize, Serialize};
+use std::io::{Error, ErrorKind};
 use question::*;
 use std::{
+    collections::HashMap,
     net::{IpAddr, Ipv4Addr, SocketAddr},
     str::FromStr,
 };
@@ -22,7 +24,7 @@ async fn return_error() -> Response {
 async fn get_questions() -> Result<Json<Question>, (StatusCode, String)> {
     // Create a new question
     let question = Question::new(
-        QuestionId::from_str("1").expect("No id provided"),
+        "1".to_string(),
         "First Question".to_string(),
         "Content of question".to_string(),
         Some(vec!["faq".to_string()]),
@@ -30,7 +32,7 @@ async fn get_questions() -> Result<Json<Question>, (StatusCode, String)> {
 
     // If the question id can be parsed to an integer, return the question as a json response
     // Otherwise, return an error message
-    match question.id.0.parse::<i32>() {
+    match question.id.parse::<i32>() {
         Err(_) => Err((StatusCode::BAD_REQUEST, "Invalid Question ID".to_string())),
         Ok(_) => Ok(Json(question)),
     }
