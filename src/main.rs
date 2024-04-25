@@ -4,44 +4,39 @@ mod store;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
+    extract::State,
     routing::get,
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
-use question::*;
-use store::*;
 use std::{
     collections::HashMap,
     net::{IpAddr, Ipv4Addr, SocketAddr},
 };
+use std::sync::Arc;
+use tokio::{self, sync::RwLock};
+use question::*;
+use store::*;
 
+// Handler to return an error message
 async fn return_error() -> Response {
     (StatusCode::NOT_FOUND, "Route not found").into_response()
 }
 
-// Handler method for getting a question
-// Used ChatGPT to fix the return type
-async fn get_questions() -> Result<Json<Question>, (StatusCode, String)> {
-    // Create a new question
-    let question = Question::new(
-        "1".to_string(),
-        "First Question".to_string(),
-        "Content of question".to_string(),
-        Some(vec!["faq".to_string()]),
-    );
-
-    // If the question id can be parsed to an integer, return the question as a json response
-    // Otherwise, return an error message
-    match question.id.parse::<i32>() {
-        Err(_) => Err((StatusCode::BAD_REQUEST, "Invalid Question ID".to_string())),
-        Ok(_) => Ok(Json(question)),
-    }
+// Handler method for getting every question
+async fn get_questions(State(store): State<Arc<RwLock<Store>>>) -> Response {
+    // Ask for the lock to read the store, wait for the lock to be granted, return the store as a response
+    store.read().await.into_response()
 }
 
 #[tokio::main]
 async fn main() {
-    // Create an in-memory database
+    // Create an in-memory database and populate it
     let store = Store::new();
+    let store = store.init();
+
+    // Make sure the store can be accessed by multiple threads safely
+    let store = Arc::new(RwLock::new(store));
 
     // Create an app with a handler for questions
     // Fallback calls the error handler if the route cannot be found
