@@ -1,11 +1,12 @@
 mod question;
 mod store;
+mod api;
 
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
     extract::State,
-    routing::get,
+    routing::{get, post},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
@@ -17,23 +18,18 @@ use std::sync::Arc;
 use tokio::{self, sync::RwLock};
 use question::*;
 use store::*;
+use api::*;
 
 // Handler to return an error message
 async fn return_error() -> Response {
     (StatusCode::NOT_FOUND, "Route not found").into_response()
 }
 
-// Handler method for getting every question
-async fn get_questions(State(store): State<Arc<RwLock<Store>>>) -> Response {
-    // Ask for the lock to read the store, wait for the lock to be granted, return the store as a response
-    store.read().await.into_response()
-}
-
 #[tokio::main]
 async fn main() {
     // Create an in-memory database and populate it
-    let store = Store::new();
-    let store = store.init();
+    let mut store = Store::new();
+    store.init();
 
     // Make sure the store can be accessed by multiple threads safely
     let store = Arc::new(RwLock::new(store));
@@ -42,6 +38,7 @@ async fn main() {
     // Fallback calls the error handler if the route cannot be found
     let app = Router::new()
         .route("/questions", get(get_questions))
+        .route("/questions", post(add_question))
         .fallback(return_error)
         .with_state(store);
 

@@ -12,7 +12,7 @@ impl Store {
         }
     }
 
-    pub fn init(self) -> Self {
+    pub fn init(&mut self) {
         let question = Question::new(
             "1".to_string(),
             "First Question".to_string(),
@@ -31,14 +31,13 @@ impl Store {
             "Content of question".to_string(),
             Some(vec!["faq".to_string()]),
         );
-        let mut store = self.add_question(question);
-        store = store.add_question(question2);
-        store.add_question(question3)
+        self.add_question(question);
+        self.add_question(question2);
+        self.add_question(question3);
     }
 
-    pub fn add_question(mut self, question: Question) -> Self {
+    pub fn add_question(&mut self, question: Question) {
         self.questions.insert(question.id.clone(), question);
-        self
     }
 }
 
