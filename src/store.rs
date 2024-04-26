@@ -41,25 +41,22 @@ impl Store {
     }
 
     pub fn update_question(&mut self, id: &str, question: Question) -> Result<StatusCode, Error> {
-        if !self.questions.contains_key(id) {
-            return Err(Error::QuestionNotFound);
+        match self.questions.get_mut(id)
+        {
+            Some(q) => {
+                *q = question;
+                Ok(StatusCode::OK)
+            },
+            None => Err(Error::QuestionNotFound)
+        
         }
-
-        self.questions
-            .entry(id.to_string())
-            .and_modify(|q| *q = question);
-
-        Ok(StatusCode::OK)
     }
 
     pub fn delete_question(&mut self, id: &str) -> Result<StatusCode, Error> {
-        if !self.questions.contains_key(id) {
-            return Err(Error::QuestionNotFound);
+        match self.questions.remove(id) {
+            Some(_) => Ok(StatusCode::OK),
+            None => Err(Error::QuestionNotFound)
         }
-
-        self.questions.remove(id);
-
-        Ok(StatusCode::OK)
     }
 }
 
