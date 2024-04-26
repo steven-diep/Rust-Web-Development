@@ -40,7 +40,11 @@ impl Store {
         self.questions.insert(question.id.clone(), question);
     }
 
-    pub fn get_question(&mut self, id: &str) -> Result<&Question, Error> {
+    pub fn get_questions(&self) -> &HashMap<String, Question> {
+        &self.questions
+    }
+
+    pub fn get_question(&self, id: &str) -> Result<&Question, Error> {
         match self.questions.get(id) {
             Some(q) => Ok(q),
             None => Err(Error::QuestionNotFound)
