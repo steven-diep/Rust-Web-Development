@@ -38,6 +38,7 @@ async fn main() {
     // Fallback calls the error handler if the route cannot be found
     let app = Router::new()
         .route("/questions", get(get_questions))
+        .route("/questions/:id", get(get_question))
         .route("/questions", post(add_question))
         .route("/questions/:id", put(update_question))
         .route("/questions/:id", delete(delete_question))

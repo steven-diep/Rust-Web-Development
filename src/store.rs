@@ -40,6 +40,13 @@ impl Store {
         self.questions.insert(question.id.clone(), question);
     }
 
+    pub fn get_question(&mut self, id: &str) -> Result<&Question, Error> {
+        match self.questions.get(id) {
+            Some(q) => Ok(q),
+            None => Err(Error::QuestionNotFound)
+        }
+    }
+
     pub fn update_question(&mut self, id: &str, question: Question) -> Result<StatusCode, Error> {
         match self.questions.get_mut(id)
         {
