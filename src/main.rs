@@ -5,8 +5,8 @@ mod api;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
-    extract::State,
-    routing::{get, post},
+    extract::{State, Path},
+    routing::{get, post, put, delete},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
@@ -39,6 +39,8 @@ async fn main() {
     let app = Router::new()
         .route("/questions", get(get_questions))
         .route("/questions", post(add_question))
+        .route("/questions/:id", put(update_question))
+        .route("/questions/:id", delete(delete_question))
         .fallback(return_error)
         .with_state(store);
 

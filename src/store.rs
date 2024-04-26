@@ -39,6 +39,28 @@ impl Store {
     pub fn add_question(&mut self, question: Question) {
         self.questions.insert(question.id.clone(), question);
     }
+
+    pub fn update_question(&mut self, id: &str, question: Question) -> Result<StatusCode, Error> {
+        if !self.questions.contains_key(id) {
+            return Err(Error::QuestionNotFound);
+        }
+
+        self.questions
+            .entry(id.to_string())
+            .and_modify(|q| *q = question);
+
+        Ok(StatusCode::OK)
+    }
+
+    pub fn delete_question(&mut self, id: &str) -> Result<StatusCode, Error> {
+        if !self.questions.contains_key(id) {
+            return Err(Error::QuestionNotFound);
+        }
+
+        self.questions.remove(id);
+
+        Ok(StatusCode::OK)
+    }
 }
 
 impl Default for Store {
@@ -50,5 +72,24 @@ impl Default for Store {
 impl IntoResponse for &Store {
     fn into_response(self) -> Response {
         (StatusCode::OK, Json(&self.questions)).into_response()
+    }
+}
+
+#[derive(Debug)]
+pub enum Error {
+    ParseError(std::num::ParseIntError),
+    MissingParameters,
+    QuestionNotFound,
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            Error::ParseError(ref err) => {
+                write!(f, "Cannot parse parameter: {}", err)
+            },
+            Error::MissingParameters => write!(f, "Missing parameter"), 
+            Error::QuestionNotFound => write!(f, "Question not found"),
+        }
     }
 }

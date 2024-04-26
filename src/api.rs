@@ -22,5 +22,26 @@ pub async fn get_questions(State(store): State<Arc<RwLock<Store>>>) -> Response 
 // Handler method for getting a specific question, given the id from a request
 
 // Update
+pub async fn update_question(
+    State(store): State<Arc<RwLock<Store>>>,
+    Path(id): Path<String>,
+    Json(question): Json<Question>,
+) -> Response {
+    match store.write().await.update_question(&id, question) {
+        Ok(_) => (StatusCode::OK, "Question updated".to_string()).into_response(),
+        Err(Error::QuestionNotFound) => (StatusCode::OK, "Question not found".to_string()).into_response(),
+        Err(_) => (StatusCode::BAD_REQUEST, "Bad Request".to_string()).into_response(),
+    }
+}
 
 // Delete
+pub async fn delete_question(
+    State(store): State<Arc<RwLock<Store>>>,
+    Path(id): Path<String>,
+) -> Response {
+    match store.write().await.delete_question(&id) {
+        Ok(_) => (StatusCode::OK, "Question deleted".to_string()).into_response(),
+        Err(Error::QuestionNotFound) => (StatusCode::OK, "Question not found".to_string()).into_response(),
+        Err(_) => (StatusCode::BAD_REQUEST, "Bad Request".to_string()).into_response(),
+    }
+}
