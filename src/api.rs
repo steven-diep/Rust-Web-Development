@@ -38,7 +38,7 @@ pub async fn update_question(
     Json(question): Json<Question>,
 ) -> Response {
     match store.write().await.update_question(&id, question) {
-        Ok(s) => (s, "Question updated".to_string()).into_response(),
+        Ok(_) => (StatusCode::OK, "Question updated".to_string()).into_response(),
         Err(Error::QuestionNotFound) => (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response(),
         Err(_) => (StatusCode::BAD_REQUEST, "Bad Request".to_string()).into_response(),
     }
@@ -50,7 +50,7 @@ pub async fn delete_question(
     Path(id): Path<String>,
 ) -> Response {
     match store.write().await.delete_question(&id) {
-        Ok(s) => (s, "Question deleted".to_string()).into_response(),
+        Ok(_) => (StatusCode::OK, "Question deleted".to_string()).into_response(),
         Err(Error::QuestionNotFound) => (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response(),
         Err(_) => (StatusCode::BAD_REQUEST, "Bad Request".to_string()).into_response(),
     }

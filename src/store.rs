@@ -47,21 +47,21 @@ impl Store {
         }
     }
 
-    pub fn update_question(&mut self, id: &str, question: Question) -> Result<StatusCode, Error> {
+    pub fn update_question(&mut self, id: &str, question: Question) -> Result<(), Error> {
         match self.questions.get_mut(id)
         {
             Some(q) => {
                 *q = question;
-                Ok(StatusCode::OK)
+                Ok(())
             },
             None => Err(Error::QuestionNotFound)
         
         }
     }
 
-    pub fn delete_question(&mut self, id: &str) -> Result<StatusCode, Error> {
+    pub fn delete_question(&mut self, id: &str) -> Result<(), Error> {
         match self.questions.remove(id) {
-            Some(_) => Ok(StatusCode::OK),
+            Some(_) => Ok(()),
             None => Err(Error::QuestionNotFound)
         }
     }
