@@ -7,7 +7,7 @@ pub async fn add_question(
     Json(question): Json<Question>,
 ) -> Response {
     store.write().await.add_question(question);
-    (StatusCode::OK, "Question added".to_string()).into_response()
+    (StatusCode::CREATED, "Question added".to_string()).into_response()
 }
 
 // Read
@@ -26,7 +26,7 @@ pub async fn get_question(
 ) -> Response {
     match store.write().await.get_question(&id) {
         Ok(q) => (StatusCode::OK, Json(q)).into_response(),
-        Err(Error::QuestionNotFound) => (StatusCode::OK, "Question not found".to_string()).into_response(),
+        Err(Error::QuestionNotFound) => (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response(),
         Err(_) => (StatusCode::BAD_REQUEST, "Bad Request".to_string()).into_response(),
     }
 }
@@ -39,7 +39,7 @@ pub async fn update_question(
 ) -> Response {
     match store.write().await.update_question(&id, question) {
         Ok(s) => (s, "Question updated".to_string()).into_response(),
-        Err(Error::QuestionNotFound) => (StatusCode::OK, "Question not found".to_string()).into_response(),
+        Err(Error::QuestionNotFound) => (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response(),
         Err(_) => (StatusCode::BAD_REQUEST, "Bad Request".to_string()).into_response(),
     }
 }
@@ -51,7 +51,7 @@ pub async fn delete_question(
 ) -> Response {
     match store.write().await.delete_question(&id) {
         Ok(s) => (s, "Question deleted".to_string()).into_response(),
-        Err(Error::QuestionNotFound) => (StatusCode::OK, "Question not found".to_string()).into_response(),
+        Err(Error::QuestionNotFound) => (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response(),
         Err(_) => (StatusCode::BAD_REQUEST, "Bad Request".to_string()).into_response(),
     }
 }
