@@ -1,5 +1,6 @@
 use crate::*;
 
+/// Question struct used to store questions in the database
 #[derive(Debug, Serialize, Clone, Deserialize)]
 pub struct Question {
     pub id: String,
@@ -9,8 +10,7 @@ pub struct Question {
 }
 
 impl Question {
-    // Method for creating a new Question given some input
-    // Returns a Question (Self)
+    /// Constructor to create a new question with the given parameters
     pub fn new(id: String, title: String, content: String, tags: Option<Vec<String>>) -> Self {
         Question {
             id,

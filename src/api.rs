@@ -1,12 +1,32 @@
 use crate::*;
 
-// Pagination
+/// Pagination struct that is being extracted from the query params
 #[derive(Debug, Deserialize)]
 pub struct Pagination {
     start: usize,
     end: usize,
 }
 
+#[derive(Debug)]
+pub enum Error {
+    ParseInt(std::num::ParseIntError),
+    MissingParameters,
+    QuestionNotFound,
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            Error::ParseInt(ref err) => {
+                write!(f, "Cannot parse parameter: {}", err)
+            }
+            Error::MissingParameters => write!(f, "Missing parameter"),
+            Error::QuestionNotFound => write!(f, "Question not found"),
+        }
+    }
+}
+
+/// Extract query parameters from the `questions` route
 fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Error> {
     if params.contains_key("start") && params.contains_key("end") {
         return Ok(Pagination {
@@ -25,6 +45,11 @@ fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Err
     Err(Error::MissingParameters)
 }
 
+/// Fetch questions from the `questions` route
+/// # Example query
+/// GET requests to this route can have a pagination attached so we just return the questions
+/// we need
+/// `/questions?start=1&end=3`
 pub async fn get_questions(
     State(store): State<Arc<RwLock<Store>>>,
     Query(params): Query<HashMap<String, String>>,

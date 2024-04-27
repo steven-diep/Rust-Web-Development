@@ -20,7 +20,7 @@ use std::{
 use store::*;
 use tokio::{self, sync::RwLock};
 
-// Handler to return an error message
+/// Handler to return an error message if a route cannot be found
 async fn return_error() -> Response {
     (StatusCode::NOT_FOUND, "Route not found").into_response()
 }
