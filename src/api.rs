@@ -1,6 +1,7 @@
 use crate::*;
 
 /// Pagination struct that is being extracted from the query params
+/// NOTE: `start` and `end` do not relate to the ids used by the questions
 #[derive(Debug, Deserialize)]
 pub struct Pagination {
     start: usize,
@@ -52,8 +53,7 @@ fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Err
 
 /// Fetch questions from the `questions` route
 /// # Example query
-/// GET requests to this route can have a pagination attached so we just return the questions
-/// we need
+/// GET requests to this route can have a pagination attached so we just return the questions we need
 /// `/questions?start=1&end=3`
 pub async fn get_questions(
     State(store): State<Arc<RwLock<Store>>>,
