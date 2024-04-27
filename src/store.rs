@@ -74,9 +74,3 @@ impl Default for Store {
         Self::new()
     }
 }
-
-impl IntoResponse for &Store {
-    fn into_response(self) -> Response {
-        (StatusCode::OK, Json(&self.questions)).into_response()
-    }
-}
