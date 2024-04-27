@@ -76,6 +76,23 @@ pub async fn get_questions(
                     .cloned()
                     .collect();
 
+                // Edge cases to make sure the values in pagination make sense
+                if pagination.start > pagination.end {
+                    return (
+                        StatusCode::RANGE_NOT_SATISFIABLE,
+                        "Invalid range passed".to_string(),
+                    )
+                        .into_response();
+                }
+
+                if pagination.end > res.len() {
+                    return (
+                        StatusCode::RANGE_NOT_SATISFIABLE,
+                        "Range is greater than length".to_string(),
+                    )
+                        .into_response();
+                }
+
                 let res = &res[pagination.start..pagination.end];
                 (StatusCode::OK, Json(res)).into_response()
             }
@@ -92,7 +109,7 @@ pub async fn get_questions(
                 .into_response(),
             Err(_) => (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
         }
-    } 
+    }
     // If no parameters are passed, return the entire database
     else {
         let res: Vec<Question> = store
@@ -143,7 +160,9 @@ pub async fn get_question(
         // If we get a good result, wrap the question in a json response
         Ok(q) => (StatusCode::OK, Json(q)).into_response(),
         // If we get an error, return a response with an error message
-        Err(Error::QuestionNotFound) => (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response(),
+        Err(Error::QuestionNotFound) => {
+            (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response()
+        }
         Err(_) => (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
     }
 }
@@ -172,7 +191,9 @@ pub async fn update_question(
         // If we get a good result, send a response informing the user
         Ok(_) => (StatusCode::OK, "Question updated".to_string()).into_response(),
         // If we get an error, return a response with an error message
-        Err(Error::QuestionNotFound) => (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response(),
+        Err(Error::QuestionNotFound) => {
+            (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response()
+        }
         Err(_) => (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
     }
 }
@@ -192,7 +213,9 @@ pub async fn delete_question(
         // If we get a good result, send a response informing the user
         Ok(_) => (StatusCode::OK, "Question deleted".to_string()).into_response(),
         // If we get an error, return a response with an error message
-        Err(Error::QuestionNotFound) => (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response(),
+        Err(Error::QuestionNotFound) => {
+            (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response()
+        }
         Err(_) => (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
     }
 }
