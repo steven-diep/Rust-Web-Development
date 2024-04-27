@@ -47,26 +47,24 @@ impl Store {
     pub fn get_question(&self, id: &str) -> Result<&Question, Error> {
         match self.questions.get(id) {
             Some(q) => Ok(q),
-            None => Err(Error::QuestionNotFound)
+            None => Err(Error::QuestionNotFound),
         }
     }
 
     pub fn update_question(&mut self, id: &str, question: Question) -> Result<(), Error> {
-        match self.questions.get_mut(id)
-        {
+        match self.questions.get_mut(id) {
             Some(q) => {
                 *q = question;
                 Ok(())
-            },
-            None => Err(Error::QuestionNotFound)
-        
+            }
+            None => Err(Error::QuestionNotFound),
         }
     }
 
     pub fn delete_question(&mut self, id: &str) -> Result<(), Error> {
         match self.questions.remove(id) {
             Some(_) => Ok(()),
-            None => Err(Error::QuestionNotFound)
+            None => Err(Error::QuestionNotFound),
         }
     }
 }
@@ -85,7 +83,7 @@ impl IntoResponse for &Store {
 
 #[derive(Debug)]
 pub enum Error {
-    ParseError(std::num::ParseIntError),
+    ParseInt(std::num::ParseIntError),
     MissingParameters,
     QuestionNotFound,
 }
@@ -93,10 +91,10 @@ pub enum Error {
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
-            Error::ParseError(ref err) => {
+            Error::ParseInt(ref err) => {
                 write!(f, "Cannot parse parameter: {}", err)
-            },
-            Error::MissingParameters => write!(f, "Missing parameter"), 
+            }
+            Error::MissingParameters => write!(f, "Missing parameter"),
             Error::QuestionNotFound => write!(f, "Question not found"),
         }
     }

@@ -1,24 +1,24 @@
+mod api;
 mod question;
 mod store;
-mod api;
 
+use api::*;
 use axum::{
+    extract::{Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Response},
-    extract::{State, Path},
-    routing::{get, post, put, delete},
+    routing::{delete, get, post, put},
     Json, Router,
 };
+use question::*;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use std::{
     collections::HashMap,
     net::{IpAddr, Ipv4Addr, SocketAddr},
 };
-use std::sync::Arc;
-use tokio::{self, sync::RwLock};
-use question::*;
 use store::*;
-use api::*;
+use tokio::{self, sync::RwLock};
 
 // Handler to return an error message
 async fn return_error() -> Response {
