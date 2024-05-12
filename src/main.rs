@@ -52,7 +52,7 @@ async fn main() {
         .with_state(store);
 
     // Host the app on localhost:3000
-    let ip = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 3000);
+    let ip = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), 3000);
 
     // Run the app
     let listener = tokio::net::TcpListener::bind(ip).await.unwrap();
