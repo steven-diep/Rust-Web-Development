@@ -3,40 +3,33 @@ use crate::*;
 /// Store struct that is being used as an in-memory storage for questions
 #[derive(Clone)]
 pub struct Store {
-    pub questions: HashMap<String, Question>,
+    pub questions: HashMap<i32, Question>,
+    pub connection: PgPool,
 }
 
 impl Store {
     /// Constructor to create a new in-memory storage
-    pub fn new() -> Self {
-        Store {
-            questions: HashMap::new(),
-        }
-    }
+    pub async fn new() -> Result<Self, Box<dyn Error>> {
+        use std::env::var;
 
-    /// Method used to create a set of sample questions and add them to storage
-    pub fn init(&mut self) {
-        let question = Question::new(
-            "1".to_string(),
-            "First Question".to_string(),
-            "Content of question".to_string(),
-            Some(vec!["faq".to_string()]),
+        let file = var("PG_PASSWORD_FILE")?;
+        let password = std::fs::read_to_string(file)?;
+        let url = format!(
+            "postgres://{}:{}@{}:5432/{}",
+            var("PG_USER")?,
+            password.trim(),
+            var("PG_HOST")?,
+            var("PG_DBNAME")?,
         );
-        let question2 = Question::new(
-            "2".to_string(),
-            "Second Question".to_string(),
-            "Content of question".to_string(),
-            Some(vec!["faq".to_string()]),
-        );
-        let question3 = Question::new(
-            "3".to_string(),
-            "Third Question".to_string(),
-            "Content of question".to_string(),
-            Some(vec!["faq".to_string()]),
-        );
-        self.add_question(question);
-        self.add_question(question2);
-        self.add_question(question3);
+
+        let pool = PgPool::connect(&url).await?;
+        sqlx::migrate!().run(&pool).await?;
+        Ok(
+            Store {
+                questions: HashMap::new(),
+                connection: pool
+            }
+        )
     }
 
     /// Add a given question to the hash map
@@ -45,42 +38,47 @@ impl Store {
     }
 
     /// Return a reference to the entire hash map
-    pub fn get_questions(&self) -> &HashMap<String, Question> {
-        &self.questions
+    pub async fn get_questions(&self) -> Result<Vec<Question>, sqlx::Error> {
+        eprintln!("Make query");
+        match sqlx::query("SELECT * FROM questions")
+            .map(|row: PgRow| Question {
+                id: row.get("id"),
+                title: row.get("title"),
+                content: row.get("content"),
+                tags: row.get("tags"),
+            })
+            .fetch_all(&self.connection)
+            .await {
+                Ok(questions) => Ok(questions),
+                Err(e) => Err(e),
+            }
     }
 
     /// Return a reference to a question given a specified id
-    pub fn get_question(&self, id: &str) -> Result<&Question, Error> {
+    pub fn get_question(&self, id: &i32) -> Result<&Question, Err> {
         match self.questions.get(id) {
             Some(q) => Ok(q),
-            None => Err(Error::QuestionNotFound),
+            None => Err(Err::QuestionNotFound),
         }
     }
 
     /// Update a question given a specified id and new data
-    pub fn update_question(&mut self, id: &str, question: Question) -> Result<(), Error> {
+    pub fn update_question(&mut self, id: &i32, question: Question) -> Result<(), Err> {
         match self.questions.get_mut(id) {
             // When a mutable reference is returned, update its content
             Some(q) => {
                 *q = question;
                 Ok(())
             }
-            None => Err(Error::QuestionNotFound),
+            None => Err(Err::QuestionNotFound),
         }
     }
 
     /// Delete a question given a specified id
-    pub fn delete_question(&mut self, id: &str) -> Result<(), Error> {
+    pub fn delete_question(&mut self, id: &i32) -> Result<(), Err> {
         match self.questions.remove(id) {
             Some(_) => Ok(()),
-            None => Err(Error::QuestionNotFound),
+            None => Err(Err::QuestionNotFound),
         }
-    }
-}
-
-/// Required by Clippy for some reason
-impl Default for Store {
-    fn default() -> Self {
-        Self::new()
     }
 }

@@ -10,27 +10,27 @@ pub struct Pagination {
 
 /// Error struct used for matching custom errors
 #[derive(Debug)]
-pub enum Error {
-    ParseInt(std::num::ParseIntError),
+pub enum Err {
     MissingParameters,
+    ParseInt(std::num::ParseIntError),
     QuestionNotFound,
 }
 
 /// Implements error messages for the custom Error struct
-impl std::fmt::Display for Error {
+impl std::fmt::Display for Err {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
-            Error::ParseInt(ref err) => {
+            Err::ParseInt(ref err) => {
                 write!(f, "Cannot parse parameter: {}", err)
             }
-            Error::MissingParameters => write!(f, "Missing parameter"),
-            Error::QuestionNotFound => write!(f, "Question not found"),
+            Err::MissingParameters => write!(f, "Missing parameter"),
+            Err::QuestionNotFound => write!(f, "Question not found"),
         }
     }
 }
 
 /// Extract query parameters from the `questions` route
-fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Error> {
+fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Err> {
     // Checks to see if the parameters passed contains the required fields
     if params.contains_key("start") && params.contains_key("end") {
         // Parse the arguments into integers, otherwise return an error
@@ -39,16 +39,16 @@ fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Err
                 .get("start")
                 .unwrap()
                 .parse::<usize>()
-                .map_err(Error::ParseInt)?,
+                .map_err(Err::ParseInt)?,
             end: params
                 .get("end")
                 .unwrap()
                 .parse::<usize>()
-                .map_err(Error::ParseInt)?,
+                .map_err(Err::ParseInt)?,
         });
     }
     // If any of the required fields are missing, return an error
-    Err(Error::MissingParameters)
+    Err(Err::MissingParameters)
 }
 
 /// Fetch questions from the `questions` route
@@ -68,13 +68,14 @@ pub async fn get_questions(
             Ok(p) => {
                 let pagination = p;
 
-                let res: Vec<Question> = store
+                let res: Vec<Question> = match store
                     .read()
                     .await
                     .get_questions()
-                    .values()
-                    .cloned()
-                    .collect();
+                    .await {
+                        Ok(res) => res,
+                        Err(_) => return (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
+                    };
 
                 // Edge cases to make sure the values in pagination make sense
                 if pagination.start > pagination.end {
@@ -97,12 +98,12 @@ pub async fn get_questions(
                 (StatusCode::OK, Json(res)).into_response()
             }
             // If we get an error, return a response with an error message
-            Err(Error::ParseInt(_)) => (
+            Err(Err::ParseInt(_)) => (
                 StatusCode::RANGE_NOT_SATISFIABLE,
                 "Failed to parse range".to_string(),
             )
                 .into_response(),
-            Err(Error::MissingParameters) => (
+            Err(Err::MissingParameters) => (
                 StatusCode::RANGE_NOT_SATISFIABLE,
                 "Missing parameters".to_string(),
             )
@@ -112,14 +113,16 @@ pub async fn get_questions(
     }
     // If no parameters are passed, return the entire database
     else {
-        let res: Vec<Question> = store
+        eprintln!("in api.rs");
+        let res: Vec<Question> = match store
             .read()
             .await
             .get_questions()
-            .values()
-            .cloned()
-            .collect();
-
+            .await {
+                Ok(res) => res,
+                Err(_) => return (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
+            };
+        eprintln!("get vector");
         let res = &res;
         (StatusCode::OK, Json(res)).into_response()
     }
@@ -153,14 +156,14 @@ pub async fn add_question(
 /// `/questions/3`
 pub async fn get_question(
     State(store): State<Arc<RwLock<Store>>>,
-    Path(id): Path<String>,
+    Path(id): Path<i32>,
 ) -> Response {
     // Request read access to the database and call its get_question method with specified id
     match store.read().await.get_question(&id) {
         // If we get a good result, wrap the question in a json response
         Ok(q) => (StatusCode::OK, Json(q)).into_response(),
         // If we get an error, return a response with an error message
-        Err(Error::QuestionNotFound) => {
+        Err(Err::QuestionNotFound) => {
             (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response()
         }
         Err(_) => (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
@@ -183,7 +186,7 @@ pub async fn get_question(
 /// }`
 pub async fn update_question(
     State(store): State<Arc<RwLock<Store>>>,
-    Path(id): Path<String>,
+    Path(id): Path<i32>,
     Json(question): Json<Question>,
 ) -> Response {
     // Request write access to the database and call its update_question method with specified id
@@ -191,7 +194,7 @@ pub async fn update_question(
         // If we get a good result, send a response informing the user
         Ok(_) => (StatusCode::OK, "Question updated".to_string()).into_response(),
         // If we get an error, return a response with an error message
-        Err(Error::QuestionNotFound) => {
+        Err(Err::QuestionNotFound) => {
             (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response()
         }
         Err(_) => (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
@@ -206,14 +209,14 @@ pub async fn update_question(
 /// `/questions/3`
 pub async fn delete_question(
     State(store): State<Arc<RwLock<Store>>>,
-    Path(id): Path<String>,
+    Path(id): Path<i32>,
 ) -> Response {
     // Request write access to the database and call its delete_question method with specified id
     match store.write().await.delete_question(&id) {
         // If we get a good result, send a response informing the user
         Ok(_) => (StatusCode::OK, "Question deleted".to_string()).into_response(),
         // If we get an error, return a response with an error message
-        Err(Error::QuestionNotFound) => {
+        Err(Err::QuestionNotFound) => {
             (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response()
         }
         Err(_) => (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),

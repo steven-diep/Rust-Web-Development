@@ -19,6 +19,9 @@ use std::{
 };
 use store::*;
 use tokio::{self, sync::RwLock};
+use sqlx::postgres::{PgPoolOptions, PgPool, PgRow};
+use sqlx::Row;
+use std::error::Error;
 
 /// Handler to return an error message if a route cannot be found
 async fn return_error() -> Response {
@@ -28,9 +31,12 @@ async fn return_error() -> Response {
 #[tokio::main]
 async fn main() {
     // Create an in-memory database and populate it
-    let mut store = Store::new();
-    store.init();
-
+    // Add error to logging when logging is set up
+    let store = Store::new().await.unwrap_or_else(|e| {
+        eprintln!("Error: {:?}", e);
+        std::process::exit(1);
+    });
+    eprintln!("Made DB");
     // Make sure the store can be accessed by multiple threads safely
     let store = Arc::new(RwLock::new(store));
 
@@ -50,5 +56,7 @@ async fn main() {
 
     // Run the app
     let listener = tokio::net::TcpListener::bind(ip).await.unwrap();
+    eprintln!("Listening");
     axum::serve(listener, app).await.unwrap();
+    eprintln!("Serving");
 }

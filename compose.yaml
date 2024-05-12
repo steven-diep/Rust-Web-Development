@@ -14,6 +14,11 @@ services:
       target: final
     ports:
       - 3000:3000
+    environment:
+      - PG_DBNAME=questions
+      - PG_HOST=db
+      - PG_USER=postgres
+      - PG_PASSWORD_FILE=/run/secrets/db-password
     secrets:
       - db-password
     depends_on:
