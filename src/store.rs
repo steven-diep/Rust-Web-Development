@@ -1,3 +1,5 @@
+use std::string::ParseError;
+
 use crate::*;
 
 /// Store struct that is being used as an in-memory storage for questions
@@ -38,9 +40,11 @@ impl Store {
     }
 
     /// Return a reference to the entire hash map
-    pub async fn get_questions(&self) -> Result<Vec<Question>, sqlx::Error> {
+    pub async fn get_questions(&self, limit: Option<i32>, offset: i32) -> Result<Vec<Question>, sqlx::Error> {
         eprintln!("Make query");
-        match sqlx::query("SELECT * FROM questions")
+        match sqlx::query("SELECT * FROM questions LIMIT $1 OFFSET $2")
+            .bind(limit)
+            .bind(offset)
             .map(|row: PgRow| Question {
                 id: row.get("id"),
                 title: row.get("title"),

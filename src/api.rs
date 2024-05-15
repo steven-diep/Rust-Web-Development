@@ -1,11 +1,13 @@
+use sqlx::postgres::PgArgumentBuffer;
+
 use crate::*;
 
 /// Pagination struct that is being extracted from the query params
 /// NOTE: `start` and `end` do not relate to the ids used by the questions
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 pub struct Pagination {
-    start: usize,
-    end: usize,
+    pub limit: Option<i32>,
+    pub offset: i32,
 }
 
 /// Error struct used for matching custom errors
@@ -32,18 +34,18 @@ impl std::fmt::Display for Err {
 /// Extract query parameters from the `questions` route
 fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Err> {
     // Checks to see if the parameters passed contains the required fields
-    if params.contains_key("start") && params.contains_key("end") {
+    if params.contains_key("limit") && params.contains_key("offset") {
         // Parse the arguments into integers, otherwise return an error
         return Ok(Pagination {
-            start: params
-                .get("start")
+            limit: Some(params
+                .get("limit")
                 .unwrap()
-                .parse::<usize>()
-                .map_err(Err::ParseInt)?,
-            end: params
-                .get("end")
+                .parse::<i32>()
+                .map_err(Err::ParseInt)?),
+            offset: params
+                .get("offset")
                 .unwrap()
-                .parse::<usize>()
+                .parse::<i32>()
                 .map_err(Err::ParseInt)?,
         });
     }
@@ -59,6 +61,8 @@ pub async fn get_questions(
     State(store): State<Arc<RwLock<Store>>>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Response {
+    let mut pagination = Pagination::default();
+
     // If parameters are passed, parse them
     if !params.is_empty() {
         // Extract the parameters
@@ -66,35 +70,18 @@ pub async fn get_questions(
             // If the parameters are good, request read access to the database, get the questions,
             // and store them in a vector. Then return the specified slice in a response.
             Ok(p) => {
-                let pagination = p;
+                pagination = p;
 
                 let res: Vec<Question> = match store
                     .read()
                     .await
-                    .get_questions()
+                    .get_questions(pagination.limit, pagination.offset)
                     .await {
                         Ok(res) => res,
                         Err(_) => return (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
                     };
 
-                // Edge cases to make sure the values in pagination make sense
-                if pagination.start > pagination.end {
-                    return (
-                        StatusCode::RANGE_NOT_SATISFIABLE,
-                        "Invalid range passed".to_string(),
-                    )
-                        .into_response();
-                }
-
-                if pagination.end > res.len() {
-                    return (
-                        StatusCode::RANGE_NOT_SATISFIABLE,
-                        "Range is greater than length".to_string(),
-                    )
-                        .into_response();
-                }
-
-                let res = &res[pagination.start..pagination.end];
+                let res = &res;
                 (StatusCode::OK, Json(res)).into_response()
             }
             // If we get an error, return a response with an error message
@@ -117,7 +104,7 @@ pub async fn get_questions(
         let res: Vec<Question> = match store
             .read()
             .await
-            .get_questions()
+            .get_questions(pagination.limit, pagination.offset)
             .await {
                 Ok(res) => res,
                 Err(_) => return (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
