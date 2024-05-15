@@ -91,7 +91,7 @@ pub async fn get_questions(
         .get_questions(pagination.limit, pagination.offset)
         .await {
             Ok(res) => res,
-            Err(_) => return (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
+            Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
         };
     let res = &res;
     (StatusCode::OK, Json(res)).into_response()
@@ -129,14 +129,10 @@ pub async fn get_question(
     Path(id): Path<i32>,
 ) -> Response {
     // Request read access to the database and call its get_question method with specified id
-    match store.read().await.get_question(&id) {
+    match store.read().await.get_question(&id).await {
         // If we get a good result, wrap the question in a json response
         Ok(q) => (StatusCode::OK, Json(q)).into_response(),
-        // If we get an error, return a response with an error message
-        Err(Err::QuestionNotFound) => {
-            (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response()
-        }
-        Err(_) => (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
+        Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
 

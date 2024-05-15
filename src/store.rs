@@ -39,8 +39,7 @@ impl Store {
 
     /// Return a reference to the entire hash map
     pub async fn get_questions(&self, limit: Option<i32>, offset: i32) -> Result<Vec<Question>, sqlx::Error> {
-        eprintln!("Make query");
-        match sqlx::query("SELECT * FROM questions LIMIT $1 OFFSET $2")
+        match sqlx::query("SELECT * FROM questions LIMIT $1 OFFSET $2;")
             .bind(limit)
             .bind(offset)
             .map(|row: PgRow| Question {
@@ -57,11 +56,20 @@ impl Store {
     }
 
     /// Return a reference to a question given a specified id
-    pub fn get_question(&self, id: &i32) -> Result<&Question, Err> {
-        match self.questions.get(id) {
-            Some(q) => Ok(q),
-            None => Err(Err::QuestionNotFound),
-        }
+    pub async fn get_question(&self, id: &i32) -> Result<Question, sqlx::Error> {
+        match sqlx::query("SELECT * FROM questions WHERE id=$1;")
+            .bind(id)
+            .map(|row: PgRow| Question {
+                id: row.get("id"),
+                title: row.get("title"),
+                content: row.get("content"),
+                tags: row.get("tags"),
+            })
+            .fetch_one(&self.connection)
+            .await {
+                Ok(q) => Ok(q),
+                Err(e) => Err(e),
+            }
     }
 
     /// Update a question given a specified id and new data
