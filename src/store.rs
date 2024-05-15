@@ -1,5 +1,3 @@
-use std::string::ParseError;
-
 use crate::*;
 
 /// Store struct that is being used as an in-memory storage for questions
@@ -36,7 +34,7 @@ impl Store {
 
     /// Add a given question to the hash map
     pub fn add_question(&mut self, question: Question) {
-        self.questions.insert(question.id.clone(), question);
+        self.questions.insert(question.id, question);
     }
 
     /// Return a reference to the entire hash map

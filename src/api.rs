@@ -1,5 +1,3 @@
-use sqlx::postgres::PgArgumentBuffer;
-
 use crate::*;
 
 /// Pagination struct that is being extracted from the query params
@@ -56,7 +54,7 @@ fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Err
 /// Fetch questions from the `questions` route
 /// # Example query
 /// GET requests to this route can have a pagination attached so we just return the questions we need
-/// `/questions?start=1&end=3`
+/// `/questions?limit=3&offset=1`
 pub async fn get_questions(
     State(store): State<Arc<RwLock<Store>>>,
     Query(params): Query<HashMap<String, String>>,
@@ -71,48 +69,33 @@ pub async fn get_questions(
             // and store them in a vector. Then return the specified slice in a response.
             Ok(p) => {
                 pagination = p;
-
-                let res: Vec<Question> = match store
-                    .read()
-                    .await
-                    .get_questions(pagination.limit, pagination.offset)
-                    .await {
-                        Ok(res) => res,
-                        Err(_) => return (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
-                    };
-
-                let res = &res;
-                (StatusCode::OK, Json(res)).into_response()
             }
             // If we get an error, return a response with an error message
-            Err(Err::ParseInt(_)) => (
+            Err(Err::ParseInt(_)) => return (
                 StatusCode::RANGE_NOT_SATISFIABLE,
                 "Failed to parse range".to_string(),
             )
                 .into_response(),
-            Err(Err::MissingParameters) => (
+            Err(Err::MissingParameters) => return (
                 StatusCode::RANGE_NOT_SATISFIABLE,
                 "Missing parameters".to_string(),
             )
                 .into_response(),
-            Err(_) => (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
+            Err(_) => return (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
         }
     }
-    // If no parameters are passed, return the entire database
-    else {
-        eprintln!("in api.rs");
-        let res: Vec<Question> = match store
-            .read()
-            .await
-            .get_questions(pagination.limit, pagination.offset)
-            .await {
-                Ok(res) => res,
-                Err(_) => return (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
-            };
-        eprintln!("get vector");
-        let res = &res;
-        (StatusCode::OK, Json(res)).into_response()
-    }
+    // Get the questions
+    let res: Vec<Question> = match store
+        .read()
+        .await
+        .get_questions(pagination.limit, pagination.offset)
+        .await {
+            Ok(res) => res,
+            Err(_) => return (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
+        };
+    let res = &res;
+    (StatusCode::OK, Json(res)).into_response()
+    
 }
 
 // CREATE OPERATION

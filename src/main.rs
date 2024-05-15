@@ -19,7 +19,7 @@ use std::{
 };
 use store::*;
 use tokio::{self, sync::RwLock};
-use sqlx::postgres::{PgPoolOptions, PgPool, PgRow};
+use sqlx::postgres::{PgPoolOptions, PgArgumentBuffer, PgPool, PgRow};
 use sqlx::Row;
 use std::error::Error;
 
