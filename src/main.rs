@@ -12,7 +12,7 @@ use axum::{
 };
 use question::*;
 use serde::{Deserialize, Serialize};
-use sqlx::postgres::{PgArgumentBuffer, PgPool, PgPoolOptions, PgRow};
+use sqlx::postgres::{PgPool, PgRow};
 use sqlx::Row;
 use std::error::Error;
 use std::sync::Arc;
@@ -30,14 +30,15 @@ async fn return_error() -> Response {
 
 #[tokio::main]
 async fn main() {
-    // Create an in-memory database and populate it
+    // Create an data store, if the data store fails to connect, end the program
     // Add error to logging when logging is set up
     let store = Store::new().await.unwrap_or_else(|e| {
         eprintln!("Error: {:?}", e);
         std::process::exit(1);
     });
     eprintln!("Made DB");
-    // Make sure the store can be accessed by multiple threads safely
+
+    // Make sure the data store can be accessed by multiple threads safely
     let store = Arc::new(RwLock::new(store));
 
     // Create an app with a handler for questions
@@ -51,12 +52,11 @@ async fn main() {
         .fallback(return_error)
         .with_state(store);
 
-    // Host the app on localhost:3000
+    // Host the app on 0.0.0.0 so that it can be accessed outside the docker container
     let ip = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), 3000);
 
     // Run the app
     let listener = tokio::net::TcpListener::bind(ip).await.unwrap();
     eprintln!("Listening");
     axum::serve(listener, app).await.unwrap();
-    eprintln!("Serving");
 }

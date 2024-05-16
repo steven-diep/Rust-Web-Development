@@ -61,18 +61,18 @@ pub async fn get_questions(
     State(store): State<Arc<RwLock<Store>>>,
     Query(params): Query<HashMap<String, String>>,
 ) -> Response {
+    // Create a default pagniation object, this will have no limit or offset
     let mut pagination = Pagination::default();
 
     // If parameters are passed, parse them
     if !params.is_empty() {
         // Extract the parameters
         match extract_pagination(params) {
-            // If the parameters are good, request read access to the database, get the questions,
-            // and store them in a vector. Then return the specified slice in a response.
+            // If the parameters are good, set the pagination object to this new one
             Ok(p) => {
                 pagination = p;
             }
-            // If we get an error, return a response with an error message
+            // If we get an error, return an early response with an error message
             Err(Err::ParseInt(_)) => {
                 return (
                     StatusCode::RANGE_NOT_SATISFIABLE,
@@ -90,7 +90,7 @@ pub async fn get_questions(
             Err(_) => return (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
         }
     }
-    // Get the questions
+    // Get the questions by passing the pagination object
     let res: Vec<Question> = match store
         .read()
         .await
@@ -135,9 +135,8 @@ pub async fn get_question(
     State(store): State<Arc<RwLock<Store>>>,
     Path(id): Path<i32>,
 ) -> Response {
-    // Request read access to the database and call its get_question method with specified id
+    // Get the question by passing the id
     match store.read().await.get_question(&id).await {
-        // If we get a good result, wrap the question in a json response
         Ok(q) => (StatusCode::OK, Json(q)).into_response(),
         Err(sqlx::Error::RowNotFound) => {
             (StatusCode::NOT_FOUND, Err::QuestionNotFound.to_string()).into_response()
@@ -164,11 +163,9 @@ pub async fn update_question(
     Path(id): Path<i32>,
     Json(new_question): Json<NewQuestion>,
 ) -> Response {
-    // Request write access to the database and call its update_question method with specified id
+    // Update the question by passing the id
     match store.write().await.update_question(&id, new_question).await {
-        // If we get a good result, send a response informing the user
         Ok(_) => (StatusCode::OK, "Question updated".to_string()).into_response(),
-        // If we get an error, return a response with an error message
         Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
@@ -183,9 +180,8 @@ pub async fn delete_question(
     State(store): State<Arc<RwLock<Store>>>,
     Path(id): Path<i32>,
 ) -> Response {
-    // Request write access to the database and call its delete_question method with specified id
+    // Delete the question by passing an id
     match store.write().await.delete_question(&id).await {
-        // If we get a good result, send a response informing the user
         Ok(_) => (StatusCode::OK, "Question deleted".to_string()).into_response(),
         Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }

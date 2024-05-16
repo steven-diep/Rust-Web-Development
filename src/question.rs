@@ -16,15 +16,3 @@ pub struct NewQuestion {
     pub content: String,
     pub tags: Option<Vec<String>>,
 }
-
-impl Question {
-    /// Constructor to create a new question with the given parameters
-    pub fn new(id: i32, title: String, content: String, tags: Option<Vec<String>>) -> Self {
-        Question {
-            id,
-            title,
-            content,
-            tags,
-        }
-    }
-}
