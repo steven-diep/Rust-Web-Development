@@ -33,7 +33,7 @@ impl Store {
     }
 
     /// Add a given question to the hash map
-    pub fn add_question(&mut self, question: Question) {
+    pub async fn add_question(&mut self, question: Question) {
         self.questions.insert(question.id, question);
     }
 
@@ -73,7 +73,7 @@ impl Store {
     }
 
     /// Update a question given a specified id and new data
-    pub fn update_question(&mut self, id: &i32, question: Question) -> Result<(), Err> {
+    pub async fn update_question(&mut self, id: &i32, question: Question) -> Result<(), Err> {
         match self.questions.get_mut(id) {
             // When a mutable reference is returned, update its content
             Some(q) => {
@@ -85,7 +85,7 @@ impl Store {
     }
 
     /// Delete a question given a specified id
-    pub fn delete_question(&mut self, id: &i32) -> Result<(), Err> {
+    pub async fn delete_question(&mut self, id: &i32) -> Result<(), Err> {
         match self.questions.remove(id) {
             Some(_) => Ok(()),
             None => Err(Err::QuestionNotFound),

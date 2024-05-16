@@ -4,8 +4,8 @@ use crate::*;
 /// NOTE: `start` and `end` do not relate to the ids used by the questions
 #[derive(Debug, Deserialize, Default)]
 pub struct Pagination {
-    pub limit: Option<i32>,
-    pub offset: i32,
+    limit: Option<i32>,
+    offset: i32,
 }
 
 /// Error struct used for matching custom errors
@@ -114,7 +114,7 @@ pub async fn add_question(
     State(store): State<Arc<RwLock<Store>>>,
     Json(question): Json<Question>,
 ) -> Response {
-    store.write().await.add_question(question);
+    store.write().await.add_question(question).await;
     (StatusCode::CREATED, "Question added".to_string()).into_response()
 }
 
@@ -132,6 +132,9 @@ pub async fn get_question(
     match store.read().await.get_question(&id).await {
         // If we get a good result, wrap the question in a json response
         Ok(q) => (StatusCode::OK, Json(q)).into_response(),
+        Err(sqlx::Error::RowNotFound) => {
+            (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response()
+        },
         Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
@@ -156,7 +159,7 @@ pub async fn update_question(
     Json(question): Json<Question>,
 ) -> Response {
     // Request write access to the database and call its update_question method with specified id
-    match store.write().await.update_question(&id, question) {
+    match store.write().await.update_question(&id, question).await {
         // If we get a good result, send a response informing the user
         Ok(_) => (StatusCode::OK, "Question updated".to_string()).into_response(),
         // If we get an error, return a response with an error message
@@ -178,7 +181,7 @@ pub async fn delete_question(
     Path(id): Path<i32>,
 ) -> Response {
     // Request write access to the database and call its delete_question method with specified id
-    match store.write().await.delete_question(&id) {
+    match store.write().await.delete_question(&id).await {
         // If we get a good result, send a response informing the user
         Ok(_) => (StatusCode::OK, "Question deleted".to_string()).into_response(),
         // If we get an error, return a response with an error message
