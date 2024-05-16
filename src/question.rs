@@ -9,6 +9,14 @@ pub struct Question {
     pub tags: Option<Vec<String>>,
 }
 
+/// New question struct used to create and update questions in the database
+#[derive(Debug, Serialize, Clone, Deserialize)]
+pub struct NewQuestion {
+    pub title: String,
+    pub content: String,
+    pub tags: Option<Vec<String>>,
+}
+
 impl Question {
     /// Constructor to create a new question with the given parameters
     pub fn new(id: i32, title: String, content: String, tags: Option<Vec<String>>) -> Self {

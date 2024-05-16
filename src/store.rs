@@ -24,21 +24,39 @@ impl Store {
 
         let pool = PgPool::connect(&url).await?;
         sqlx::migrate!().run(&pool).await?;
-        Ok(
-            Store {
-                questions: HashMap::new(),
-                connection: pool
-            }
-        )
+        Ok(Store {
+            questions: HashMap::new(),
+            connection: pool,
+        })
     }
 
     /// Add a given question to the hash map
-    pub async fn add_question(&mut self, question: Question) {
-        self.questions.insert(question.id, question);
+    pub async fn add_question(&mut self, new_question: NewQuestion) -> Result<(), sqlx::Error> {
+        let mut transaction = self.connection.begin().await?;
+        match sqlx::query(
+            "INSERT INTO questions (title, content, tags)
+                VALUES ($1, $2, $3);",
+        )
+        .bind(new_question.title)
+        .bind(new_question.content)
+        .bind(new_question.tags)
+        .execute(&mut *transaction)
+        .await
+        {
+            Ok(_) => {
+                transaction.commit().await?;
+                Ok(())
+            }
+            Err(e) => Err(e),
+        }
     }
 
     /// Return a reference to the entire hash map
-    pub async fn get_questions(&self, limit: Option<i32>, offset: i32) -> Result<Vec<Question>, sqlx::Error> {
+    pub async fn get_questions(
+        &self,
+        limit: Option<i32>,
+        offset: i32,
+    ) -> Result<Vec<Question>, sqlx::Error> {
         match sqlx::query("SELECT * FROM questions LIMIT $1 OFFSET $2;")
             .bind(limit)
             .bind(offset)
@@ -49,10 +67,11 @@ impl Store {
                 tags: row.get("tags"),
             })
             .fetch_all(&self.connection)
-            .await {
-                Ok(questions) => Ok(questions),
-                Err(e) => Err(e),
-            }
+            .await
+        {
+            Ok(questions) => Ok(questions),
+            Err(e) => Err(e),
+        }
     }
 
     /// Return a reference to a question given a specified id
@@ -66,10 +85,11 @@ impl Store {
                 tags: row.get("tags"),
             })
             .fetch_one(&self.connection)
-            .await {
-                Ok(q) => Ok(q),
-                Err(e) => Err(e),
-            }
+            .await
+        {
+            Ok(q) => Ok(q),
+            Err(e) => Err(e),
+        }
     }
 
     /// Update a question given a specified id and new data

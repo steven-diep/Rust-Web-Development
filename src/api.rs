@@ -35,11 +35,13 @@ fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Err
     if params.contains_key("limit") && params.contains_key("offset") {
         // Parse the arguments into integers, otherwise return an error
         return Ok(Pagination {
-            limit: Some(params
-                .get("limit")
-                .unwrap()
-                .parse::<i32>()
-                .map_err(Err::ParseInt)?),
+            limit: Some(
+                params
+                    .get("limit")
+                    .unwrap()
+                    .parse::<i32>()
+                    .map_err(Err::ParseInt)?,
+            ),
             offset: params
                 .get("offset")
                 .unwrap()
@@ -71,16 +73,20 @@ pub async fn get_questions(
                 pagination = p;
             }
             // If we get an error, return a response with an error message
-            Err(Err::ParseInt(_)) => return (
-                StatusCode::RANGE_NOT_SATISFIABLE,
-                "Failed to parse range".to_string(),
-            )
-                .into_response(),
-            Err(Err::MissingParameters) => return (
-                StatusCode::RANGE_NOT_SATISFIABLE,
-                "Missing parameters".to_string(),
-            )
-                .into_response(),
+            Err(Err::ParseInt(_)) => {
+                return (
+                    StatusCode::RANGE_NOT_SATISFIABLE,
+                    "Failed to parse range".to_string(),
+                )
+                    .into_response()
+            }
+            Err(Err::MissingParameters) => {
+                return (
+                    StatusCode::RANGE_NOT_SATISFIABLE,
+                    "Missing parameters".to_string(),
+                )
+                    .into_response()
+            }
             Err(_) => return (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
         }
     }
@@ -89,13 +95,13 @@ pub async fn get_questions(
         .read()
         .await
         .get_questions(pagination.limit, pagination.offset)
-        .await {
-            Ok(res) => res,
-            Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
-        };
+        .await
+    {
+        Ok(res) => res,
+        Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+    };
     let res = &res;
     (StatusCode::OK, Json(res)).into_response()
-    
 }
 
 // CREATE OPERATION
@@ -112,10 +118,12 @@ pub async fn get_questions(
 /// }`
 pub async fn add_question(
     State(store): State<Arc<RwLock<Store>>>,
-    Json(question): Json<Question>,
+    Json(question): Json<NewQuestion>,
 ) -> Response {
-    store.write().await.add_question(question).await;
-    (StatusCode::CREATED, "Question added".to_string()).into_response()
+    match store.write().await.add_question(question).await {
+        Ok(_) => (StatusCode::CREATED, "Question added".to_string()).into_response(),
+        Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+    }
 }
 
 // READ OPERATION
@@ -134,7 +142,7 @@ pub async fn get_question(
         Ok(q) => (StatusCode::OK, Json(q)).into_response(),
         Err(sqlx::Error::RowNotFound) => {
             (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response()
-        },
+        }
         Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }

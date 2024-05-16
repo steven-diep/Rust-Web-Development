@@ -12,6 +12,9 @@ use axum::{
 };
 use question::*;
 use serde::{Deserialize, Serialize};
+use sqlx::postgres::{PgArgumentBuffer, PgPool, PgPoolOptions, PgRow};
+use sqlx::Row;
+use std::error::Error;
 use std::sync::Arc;
 use std::{
     collections::HashMap,
@@ -19,9 +22,6 @@ use std::{
 };
 use store::*;
 use tokio::{self, sync::RwLock};
-use sqlx::postgres::{PgPoolOptions, PgArgumentBuffer, PgPool, PgRow};
-use sqlx::Row;
-use std::error::Error;
 
 /// Handler to return an error message if a route cannot be found
 async fn return_error() -> Response {
