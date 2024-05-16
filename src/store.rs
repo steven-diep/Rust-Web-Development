@@ -76,7 +76,7 @@ impl Store {
 
     /// Return a reference to a question given a specified id
     pub async fn get_question(&self, id: &i32) -> Result<Question, sqlx::Error> {
-        match sqlx::query("SELECT * FROM questions WHERE id=$1;")
+        match sqlx::query("SELECT * FROM questions WHERE id = $1;")
             .bind(id)
             .map(|row: PgRow| Question {
                 id: row.get("id"),
@@ -93,14 +93,25 @@ impl Store {
     }
 
     /// Update a question given a specified id and new data
-    pub async fn update_question(&mut self, id: &i32, question: Question) -> Result<(), Err> {
-        match self.questions.get_mut(id) {
-            // When a mutable reference is returned, update its content
-            Some(q) => {
-                *q = question;
+    pub async fn update_question(&mut self, id: &i32, new_question: NewQuestion) -> Result<(), sqlx::Error> {
+        let mut transaction = self.connection.begin().await?;
+        match sqlx::query(
+            "UPDATE questions 
+                SET title = $1, content = $2, tags = $3
+                WHERE id = $4;",
+        )
+        .bind(new_question.title)
+        .bind(new_question.content)
+        .bind(new_question.tags)
+        .bind(id)
+        .execute(&mut *transaction)
+        .await
+        {
+            Ok(_) => {
+                transaction.commit().await?;
                 Ok(())
             }
-            None => Err(Err::QuestionNotFound),
+            Err(e) => Err(e),
         }
     }
 

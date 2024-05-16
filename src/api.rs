@@ -111,16 +111,15 @@ pub async fn get_questions(
 /// POST requests to this route have an json body attached so we just create the question we need
 /// `/questions`
 /// `{
-///     "id": "4",
 ///     "title": "New Question",
 ///     "content": "This is the contents of the new question",
 ///     "tags": ["sample", "tags", "example"]
 /// }`
 pub async fn add_question(
     State(store): State<Arc<RwLock<Store>>>,
-    Json(question): Json<NewQuestion>,
+    Json(new_question): Json<NewQuestion>,
 ) -> Response {
-    match store.write().await.add_question(question).await {
+    match store.write().await.add_question(new_question).await {
         Ok(_) => (StatusCode::CREATED, "Question added".to_string()).into_response(),
         Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
@@ -156,7 +155,6 @@ pub async fn get_question(
 /// json body passed
 /// `/questions/1`
 /// `{
-///     "id": "1",
 ///     "title": "Updated Question",
 ///     "content": "This is the new contents of the question",
 ///     "tags": ["sample", "tags", "example"]
@@ -164,17 +162,14 @@ pub async fn get_question(
 pub async fn update_question(
     State(store): State<Arc<RwLock<Store>>>,
     Path(id): Path<i32>,
-    Json(question): Json<Question>,
+    Json(new_question): Json<NewQuestion>,
 ) -> Response {
     // Request write access to the database and call its update_question method with specified id
-    match store.write().await.update_question(&id, question).await {
+    match store.write().await.update_question(&id, new_question).await {
         // If we get a good result, send a response informing the user
         Ok(_) => (StatusCode::OK, "Question updated".to_string()).into_response(),
         // If we get an error, return a response with an error message
-        Err(Err::QuestionNotFound) => {
-            (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response()
-        }
-        Err(_) => (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
+        Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
 
@@ -192,10 +187,6 @@ pub async fn delete_question(
     match store.write().await.delete_question(&id).await {
         // If we get a good result, send a response informing the user
         Ok(_) => (StatusCode::OK, "Question deleted".to_string()).into_response(),
-        // If we get an error, return a response with an error message
-        Err(Err::QuestionNotFound) => {
-            (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response()
-        }
-        Err(_) => (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
+        Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
