@@ -140,7 +140,7 @@ pub async fn get_question(
         // If we get a good result, wrap the question in a json response
         Ok(q) => (StatusCode::OK, Json(q)).into_response(),
         Err(sqlx::Error::RowNotFound) => {
-            (StatusCode::NOT_FOUND, "Question not found".to_string()).into_response()
+            (StatusCode::NOT_FOUND, Err::QuestionNotFound.to_string()).into_response()
         }
         Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }

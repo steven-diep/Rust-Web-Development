@@ -116,10 +116,20 @@ impl Store {
     }
 
     /// Delete a question given a specified id
-    pub async fn delete_question(&mut self, id: &i32) -> Result<(), Err> {
-        match self.questions.remove(id) {
-            Some(_) => Ok(()),
-            None => Err(Err::QuestionNotFound),
+    pub async fn delete_question(&mut self, id: &i32) -> Result<(), sqlx::Error> {
+        let mut transaction = self.connection.begin().await?;
+        match sqlx::query(
+            "DELETE FROM questions WHERE id = $1;",
+        )
+        .bind(id)
+        .execute(&mut *transaction)
+        .await
+        {
+            Ok(_) => {
+                transaction.commit().await?;
+                Ok(())
+            }
+            Err(e) => Err(e),
         }
     }
 }
