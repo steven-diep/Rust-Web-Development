@@ -4,8 +4,8 @@ mod store;
 
 use api::*;
 use axum::{
-    extract::{Path, Query, State},
-    http::StatusCode,
+    extract::{Path, Query, State, MatchedPath},
+    http::{StatusCode, Request},
     response::{IntoResponse, Response},
     routing::{delete, get, post, put},
     Json, Router,
@@ -23,6 +23,8 @@ use std::{
 use store::*;
 use tokio::{self, sync::RwLock};
 use tracing_subscriber::fmt::format::FmtSpan;
+use tower_http::trace::TraceLayer;
+use tracing::info_span;
 
 /// Handler to return an error message if a route cannot be found
 async fn return_error() -> Response {
@@ -62,6 +64,24 @@ async fn main() {
         .route("/questions/:id", put(update_question))
         .route("/questions/:id", delete(delete_question))
         .fallback(return_error)
+        // Source for trace layer code: https://github.com/tokio-rs/axum/blob/main/examples/tracing-aka-logging/src/main.rs
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &Request<_>| {
+                    let matched_path = request
+                        .extensions()
+                        .get::<MatchedPath>()
+                        .map(MatchedPath::as_str);
+
+                    info_span!(
+                        "http_request",
+                        method = ?request.method(),
+                        matched_path,
+                        some_other_field = tracing::field::Empty,
+                    )
+                })
+    
+        )
         .with_state(store);
 
     // Host the app on 0.0.0.0 so that it can be accessed outside the docker container
