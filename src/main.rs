@@ -4,8 +4,8 @@ mod store;
 
 use api::*;
 use axum::{
-    extract::{Path, Query, State, MatchedPath},
-    http::{StatusCode, Request},
+    extract::{MatchedPath, Path, Query, State},
+    http::{Request, StatusCode},
     response::{IntoResponse, Response},
     routing::{delete, get, post, put},
     Json, Router,
@@ -22,9 +22,9 @@ use std::{
 };
 use store::*;
 use tokio::{self, sync::RwLock};
-use tracing_subscriber::fmt::format::FmtSpan;
 use tower_http::trace::TraceLayer;
 use tracing::info_span;
+use tracing_subscriber::fmt::format::FmtSpan;
 
 /// Handler to return an error message if a route cannot be found
 async fn return_error() -> Response {
@@ -34,10 +34,8 @@ async fn return_error() -> Response {
 #[tokio::main]
 async fn main() {
     // Set up tracing in order to get tracing information printed to the console
-    let log_filter = std::env::var("RUST_LOG")
-        .unwrap_or_else(|_|
-            "practical_rust_book=info".to_owned()
-        );
+    let log_filter =
+        std::env::var("RUST_LOG").unwrap_or_else(|_| "practical_rust_book=info".to_owned());
 
     tracing_subscriber::fmt()
         .with_env_filter(log_filter)
@@ -66,21 +64,19 @@ async fn main() {
         .fallback(return_error)
         // Source for trace layer code: https://github.com/tokio-rs/axum/blob/main/examples/tracing-aka-logging/src/main.rs
         .layer(
-            TraceLayer::new_for_http()
-                .make_span_with(|request: &Request<_>| {
-                    let matched_path = request
-                        .extensions()
-                        .get::<MatchedPath>()
-                        .map(MatchedPath::as_str);
+            TraceLayer::new_for_http().make_span_with(|request: &Request<_>| {
+                let matched_path = request
+                    .extensions()
+                    .get::<MatchedPath>()
+                    .map(MatchedPath::as_str);
 
-                    info_span!(
-                        "http_request",
-                        method = ?request.method(),
-                        matched_path,
-                        some_other_field = tracing::field::Empty,
-                    )
-                })
-    
+                info_span!(
+                    "http_request",
+                    method = ?request.method(),
+                    matched_path,
+                    some_other_field = tracing::field::Empty,
+                )
+            }),
         )
         .with_state(store);
 

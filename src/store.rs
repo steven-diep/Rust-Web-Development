@@ -54,7 +54,10 @@ impl Store {
                 transaction.commit().await?;
                 Ok(())
             }
-            Err(e) => Err(e),
+            Err(e) => {
+                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                Err(e)
+            }
         }
     }
 
@@ -79,7 +82,10 @@ impl Store {
         // Match the results from the query and return the questions if ok
         {
             Ok(questions) => Ok(questions),
-            Err(e) => Err(e),
+            Err(e) => {
+                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                Err(e)
+            }
         }
     }
 
@@ -99,7 +105,10 @@ impl Store {
         // Match the results from the query and return the question if ok
         {
             Ok(q) => Ok(q),
-            Err(e) => Err(e),
+            Err(e) => {
+                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                Err(e)
+            }
         }
     }
 
@@ -130,7 +139,10 @@ impl Store {
                 transaction.commit().await?;
                 Ok(())
             }
-            Err(e) => Err(e),
+            Err(e) => {
+                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                Err(e)
+            }
         }
     }
 
@@ -150,7 +162,10 @@ impl Store {
                 transaction.commit().await?;
                 Ok(())
             }
-            Err(e) => Err(e),
+            Err(e) => {
+                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                Err(e)
+            }
         }
     }
 }
