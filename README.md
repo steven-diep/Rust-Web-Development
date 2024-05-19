@@ -4,10 +4,10 @@ Author: Steven Diep
 ## About
 This repository contains my homework assignment submissions for the 'Rust Web Development' course at Portland State University.
 
-This project currently contains a REST API implemented using Axum with the basic CRUD operations needed to manage an in-memory set of questions.
+This project currently contains a REST API implemented using Axum with the basic CRUD operations needed to manage a Postgres database of questions and answers.
 
 ## Requirements
-- Rust
+- Docker Desktop
 
 ## Installation
 To run this project, follow the steps below.
@@ -18,7 +18,14 @@ To run this project, follow the steps below.
 git clone https://github.com/steven-diep/Rust-Web-Development.git
 ```
 
-2. Run the project:
+2. Create a file named `password.txt` in the `db` directory with your database password (see `password.example.txt` for reference)
+
+3. To run the project:
 ```Bash
-cargo run
+docker compose up --build
+```
+
+4. To stop the project:
+```Bash
+docker compose down
 ```
