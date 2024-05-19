@@ -33,6 +33,8 @@ impl Store {
         Ok(Store { connection: pool })
     }
 
+    // Questions
+
     /// Add a given question to database
     pub async fn add_question(&mut self, new_question: NewQuestion) -> Result<(), sqlx::Error> {
         // Create a transaction so that the operation will be atomic since we are modifying the db
@@ -154,6 +156,62 @@ impl Store {
         // Write and execute the query
         match sqlx::query("DELETE FROM questions WHERE id = $1;")
             .bind(id)
+            .execute(&mut *transaction)
+            .await
+        // Match the results from the query and commit the query if ok
+        {
+            Ok(_) => {
+                transaction.commit().await?;
+                Ok(())
+            }
+            Err(e) => {
+                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                Err(e)
+            }
+        }
+    }
+
+    // Answers
+
+    /// Get items from the database, apply a limit and offset if applicable
+    pub async fn get_answers(
+        &self,
+        limit: Option<i32>,
+        offset: i32,
+    ) -> Result<Vec<Answer>, sqlx::Error> {
+        // Write and execute the query
+        match sqlx::query("SELECT * FROM answers LIMIT $1 OFFSET $2;")
+            .bind(limit)
+            .bind(offset)
+            .map(|row: PgRow| Answer {
+                id: row.get("id"),
+                content: row.get("content"),
+                corresponding_question: row.get("corresponding_question"),
+            })
+            .fetch_all(&self.connection)
+            .await
+        // Match the results from the query and return the answers if ok
+        {
+            Ok(answers) => Ok(answers),
+            Err(e) => {
+                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                Err(e)
+            }
+        }
+    }
+
+    /// Add a given answer to database
+    pub async fn add_answer(&mut self, new_answer: NewAnswer) -> Result<(), sqlx::Error> {
+        // Create a transaction so that the operation will be atomic since we are modifying the db
+        let mut transaction = self.connection.begin().await?;
+
+        // Write and execute the query
+        match sqlx::query(
+            "INSERT INTO answers (content, corresponding_question)
+                VALUES ($1, $2);",
+        )
+            .bind(new_answer.content)
+            .bind(new_answer.corresponding_question)
             .execute(&mut *transaction)
             .await
         // Match the results from the query and commit the query if ok

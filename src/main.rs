@@ -1,5 +1,6 @@
 mod api;
 mod question;
+mod answer;
 mod store;
 
 use api::*;
@@ -11,6 +12,7 @@ use axum::{
     Json, Router,
 };
 use question::*;
+use answer::*;
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::{PgPool, PgRow};
 use sqlx::Row;
@@ -61,6 +63,8 @@ async fn main() {
         .route("/questions", post(add_question))
         .route("/questions/:id", put(update_question))
         .route("/questions/:id", delete(delete_question))
+        .route("/answers", get(get_answers))
+        .route("/answers", post(add_answer))
         .fallback(return_error)
         // Source for trace layer code: https://github.com/tokio-rs/axum/blob/main/examples/tracing-aka-logging/src/main.rs
         .layer(

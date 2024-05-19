@@ -1,5 +1,7 @@
 use crate::*;
 
+// Questions Table Routes
+
 /// Pagination struct that is being extracted from the query params
 /// NOTE: `start` and `end` do not relate to the ids used by the questions
 #[derive(Debug, Deserialize, Default)]
@@ -183,6 +185,77 @@ pub async fn delete_question(
     // Delete the question by passing an id
     match store.write().await.delete_question(&id).await {
         Ok(_) => (StatusCode::OK, "Question deleted".to_string()).into_response(),
+        Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+    }
+}
+
+// Answers Table Routes
+
+/// Fetch answers from the `answers` route
+/// # Example query
+/// GET requests to this route can have a pagination attached so we just return the answers we need
+/// `/answers?limit=3&offset=1`
+pub async fn get_answers(
+    State(store): State<Arc<RwLock<Store>>>,
+    Query(params): Query<HashMap<String, String>>,
+) -> Response {
+    // Create a default pagniation object, this will have no limit or offset
+    let mut pagination = Pagination::default();
+
+    // If parameters are passed, parse them
+    if !params.is_empty() {
+        // Extract the parameters
+        match extract_pagination(params) {
+            // If the parameters are good, set the pagination object to this new one
+            Ok(p) => {
+                pagination = p;
+            }
+            // If we get an error, return an early response with an error message
+            Err(Err::ParseInt(_)) => {
+                return (
+                    StatusCode::RANGE_NOT_SATISFIABLE,
+                    "Failed to parse range".to_string(),
+                )
+                    .into_response()
+            }
+            Err(Err::MissingParameters) => {
+                return (
+                    StatusCode::RANGE_NOT_SATISFIABLE,
+                    "Missing parameters".to_string(),
+                )
+                    .into_response()
+            }
+            Err(_) => return (StatusCode::BAD_REQUEST, "Bad request".to_string()).into_response(),
+        }
+    }
+    // Get the answers by passing the pagination object
+    let res: Vec<Answer> = match store
+        .read()
+        .await
+        .get_answers(pagination.limit, pagination.offset)
+        .await
+    {
+        Ok(res) => res,
+        Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+    };
+    let res = &res;
+    (StatusCode::OK, Json(res)).into_response()
+}
+
+/// Create a new answer in the `answers` based on a json body specifying the new data in the answer
+/// # Example query
+/// POST requests to this route have an json body attached so we just create the answer we need
+/// `/answers`
+/// `{
+///     "content": "This is the answer to question 1",
+///     "corresponding_question": 1
+/// }`
+pub async fn add_answer(
+    State(store): State<Arc<RwLock<Store>>>,
+    Json(new_answer): Json<NewAnswer>,
+) -> Response {
+    match store.write().await.add_answer(new_answer).await {
+        Ok(_) => (StatusCode::CREATED, "Answer added".to_string()).into_response(),
         Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
