@@ -1,8 +1,9 @@
+mod answer;
 mod api;
 mod question;
-mod answer;
 mod store;
 
+use answer::*;
 use api::*;
 use axum::{
     extract::{MatchedPath, Path, Query, State},
@@ -12,7 +13,6 @@ use axum::{
     Json, Router,
 };
 use question::*;
-use answer::*;
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::{PgPool, PgRow};
 use sqlx::Row;
