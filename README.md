@@ -4,7 +4,7 @@ Author: Steven Diep
 ## About
 This repository contains my homework assignment submissions for the 'Rust Web Development' course at Portland State University.
 
-This project currently contains a REST API implemented using Axum with the basic CRUD operations needed to manage a Postgres database of questions and answers.
+This project currently contains a REST API implemented using Axum with the basic CRUD operations needed to manage a Postgres database of questions and answers for persistant storage.
 
 ## Requirements
 - Docker Desktop
