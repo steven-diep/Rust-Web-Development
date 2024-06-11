@@ -25,9 +25,9 @@ pub fn Finder(props: &FinderProps) -> Html {
     let props = props.clone();
     html! { <>
         <div>
-            <input type="text" placeholder="joke id" oninput={change_key}/>
+            <input type="text" placeholder="Question Id" oninput={change_key}/>
             <button onclick={move |_| props.on_find.emit((*key).clone())}>
-                {"Find this joke"}
+                {"Find Question"}
             </button>
         </div>
     </> }
