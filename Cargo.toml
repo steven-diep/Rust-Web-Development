@@ -1,4 +1,3 @@
-workspace = { members = ["frontend"] }
 [package]
 name = "rustproject"
 version = "0.1.0"
