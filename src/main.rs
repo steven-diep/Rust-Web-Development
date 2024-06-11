@@ -7,7 +7,7 @@ use answer::*;
 use api::*;
 use axum::{
     extract::{MatchedPath, Path, Query, State},
-    http::{Request, StatusCode},
+    http::{Method, Request, StatusCode},
     response::{IntoResponse, Response},
     routing::{delete, get, post, put},
     Json, Router,
@@ -24,7 +24,7 @@ use std::{
 };
 use store::*;
 use tokio::{self, sync::RwLock};
-use tower_http::trace::TraceLayer;
+use tower_http::{cors, trace::TraceLayer};
 use tracing::info_span;
 use tracing_subscriber::fmt::format::FmtSpan;
 
@@ -43,6 +43,11 @@ async fn main() {
         .with_env_filter(log_filter)
         .with_span_events(FmtSpan::CLOSE)
         .init();
+
+    // Set up a CORS layer
+    let cors = cors::CorsLayer::new()
+        .allow_methods([Method::GET])
+        .allow_origin(cors::Any);
 
     // Create an data store, if the data store fails to connect, end the program
     // Add error to logging when logging is set up
@@ -66,6 +71,7 @@ async fn main() {
         .route("/answers", get(get_answers))
         .route("/answers", post(add_answer))
         .fallback(return_error)
+        .layer(cors)
         // Source for trace layer code: https://github.com/tokio-rs/axum/blob/main/examples/tracing-aka-logging/src/main.rs
         .layer(
             TraceLayer::new_for_http().make_span_with(|request: &Request<_>| {
