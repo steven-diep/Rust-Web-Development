@@ -1,8 +1,6 @@
-mod cookie;
 mod finder;
 mod joke;
 
-use cookie::*;
 use finder::*;
 use joke::*;
 
@@ -11,14 +9,12 @@ use std::collections::HashSet;
 extern crate serde;
 use gloo_net::http;
 extern crate wasm_bindgen_futures;
-use wasm_cookies as cookies;
 use web_sys::HtmlTextAreaElement;
 use yew::prelude::*;
 
 pub type JokeResult = Result<JokeStruct, gloo_net::Error>;
 
 struct App {
-    cookie: String,
     joke: JokeResult,
 }
 
@@ -39,10 +35,9 @@ impl Component for App {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
-        let cookie = acquire_cookie();
         App::refresh_joke(ctx, None);
         let joke = Err(gloo_net::Error::GlooError("Loading Joke…".to_string()));
-        Self { cookie, joke }
+        Self { joke }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -59,14 +54,10 @@ impl Component for App {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let cookie = &self.cookie;
         let joke = &self.joke;
         html! {
         <>
             <h1>{ "Knock-Knock" }</h1>
-            if false {
-                {render_cookie(cookie)}
-            }
             if let Ok(ref joke) = joke {
                 <Joke joke={joke.clone()}/>
             }
