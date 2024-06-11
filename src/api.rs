@@ -111,7 +111,7 @@ pub async fn get_questions(
 /// Create a new question in the `questions` based on a json body specifying the new data in the question
 /// # Example query
 /// POST requests to this route have an json body attached so we just create the question we need
-/// `/questions`
+/// `/question`
 /// `{
 ///     "title": "New Question",
 ///     "content": "This is the contents of the new question",
@@ -132,13 +132,30 @@ pub async fn add_question(
 /// Fetch a specific question from the `questions` route based on the id passed in the route
 /// # Example query
 /// GET requests to this route have an id attached so we just return the question we need
-/// `/questions/3`
+/// `/question/3`
 pub async fn get_question(
     State(store): State<Arc<RwLock<Store>>>,
     Path(id): Path<i32>,
 ) -> Response {
     // Get the question by passing the id
     match store.read().await.get_question(&id).await {
+        Ok(q) => (StatusCode::OK, Json(q)).into_response(),
+        Err(sqlx::Error::RowNotFound) => {
+            (StatusCode::NOT_FOUND, Err::QuestionNotFound.to_string()).into_response()
+        }
+        Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
+    }
+}
+
+/// Fetch a random question from the `questions` route
+/// # Example query
+/// GET requests to this route have an id attached so we just return the question we need
+/// `/question`
+pub async fn get_random_question(
+    State(store): State<Arc<RwLock<Store>>>,
+) -> Response {
+    // Get the question by passing the id
+    match store.read().await.get_random_question().await {
         Ok(q) => (StatusCode::OK, Json(q)).into_response(),
         Err(sqlx::Error::RowNotFound) => {
             (StatusCode::NOT_FOUND, Err::QuestionNotFound.to_string()).into_response()
@@ -154,7 +171,7 @@ pub async fn get_question(
 /// # Example query
 /// PUT requests to this route have an id attached so we just update the question we need with the
 /// json body passed
-/// `/questions/1`
+/// `/question/1`
 /// `{
 ///     "title": "Updated Question",
 ///     "content": "This is the new contents of the question",
@@ -177,7 +194,7 @@ pub async fn update_question(
 /// Delete a specific question from the `questions` route based on the id passed in the route
 /// # Example query
 /// DELETE requests to this route have an id attached so we just delete the question we need
-/// `/questions/3`
+/// `/question/3`
 pub async fn delete_question(
     State(store): State<Arc<RwLock<Store>>>,
     Path(id): Path<i32>,
@@ -245,7 +262,7 @@ pub async fn get_answers(
 /// Create a new answer in the `answers` based on a json body specifying the new data in the answer
 /// # Example query
 /// POST requests to this route have an json body attached so we just create the answer we need
-/// `/answers`
+/// `/answer`
 /// `{
 ///     "content": "This is the answer to question 1",
 ///     "corresponding_question": 1

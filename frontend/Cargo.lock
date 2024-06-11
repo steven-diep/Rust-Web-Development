@@ -698,19 +698,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "knock-knock-yew"
-version = "0.1.0"
-dependencies = [
- "gloo-console 0.3.0",
- "gloo-net 0.2.6",
- "serde",
- "wasm-bindgen-futures",
- "wasm-cookies",
- "web-sys",
- "yew",
-]
-
-[[package]]
 name = "libc"
 version = "0.2.155"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -904,6 +891,19 @@ name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "719b953e2095829ee67db738b3bfa9fa368c94900df327b3f07fe6e794d2fe1f"
+
+[[package]]
+name = "rustprojectyew"
+version = "0.1.0"
+dependencies = [
+ "gloo-console 0.3.0",
+ "gloo-net 0.2.6",
+ "serde",
+ "wasm-bindgen-futures",
+ "wasm-cookies",
+ "web-sys",
+ "yew",
+]
 
 [[package]]
 name = "rustversion"

@@ -114,6 +114,28 @@ impl Store {
         }
     }
 
+    /// Get a random item from the database
+    pub async fn get_random_question(&self) -> Result<Question, sqlx::Error> {
+        // Write and execute the query
+        match sqlx::query("SELECT * FROM questions ORDER BY RANDOM () LIMIT 1;")
+            .map(|row: PgRow| Question {
+                id: row.get("id"),
+                title: row.get("title"),
+                content: row.get("content"),
+                tags: row.get("tags"),
+            })
+            .fetch_one(&self.connection)
+            .await
+        // Match the results from the query and return the question if ok
+        {
+            Ok(q) => Ok(q),
+            Err(e) => {
+                tracing::event!(tracing::Level::ERROR, "{:?}", e);
+                Err(e)
+            }
+        }
+    }
+
     /// Update a question in the database given a specified id and new data
     pub async fn update_question(
         &mut self,
