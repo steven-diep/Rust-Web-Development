@@ -16,15 +16,8 @@ impl QuestionStruct {
 
         // If a key is passed, get the corresponding question; otherwise, get a random question
         let request = match &key {
-            None => format!(
-                "{}/question",
-                host,
-            ),
-            Some(ref key) => format!(
-                "{}/question/{}",
-                host,
-                key,
-            ),
+            None => format!("{}/question", host,),
+            Some(ref key) => format!("{}/question/{}", host, key,),
         };
         // Match the response and process the question if ok
         let response = http::Request::get(&request).send().await;

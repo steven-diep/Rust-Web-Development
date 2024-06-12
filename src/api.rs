@@ -151,9 +151,7 @@ pub async fn get_question(
 /// # Example query
 /// GET requests to this route have an id attached so we just return the question we need
 /// `/question`
-pub async fn get_random_question(
-    State(store): State<Arc<RwLock<Store>>>,
-) -> Response {
+pub async fn get_random_question(State(store): State<Arc<RwLock<Store>>>) -> Response {
     // Get the question by passing the id
     match store.read().await.get_random_question().await {
         Ok(q) => (StatusCode::OK, Json(q)).into_response(),
