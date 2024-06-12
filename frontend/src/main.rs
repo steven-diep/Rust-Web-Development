@@ -72,7 +72,7 @@ impl Component for App {
                     <span class="error">{format!("Server Error: {error}")}</span>
                 </div>
             }
-            <div>
+            <div class="random">
                 <button onclick={ctx.link().callback(|_| Msg::GetQuestion(None))}>{"Get Random Question"}</button>
             </div>
             <Finder on_find={ctx.link().callback(Msg::GetQuestion)}/>

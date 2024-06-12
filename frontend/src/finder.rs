@@ -12,7 +12,7 @@ pub fn Finder(props: &FinderProps) -> Html {
     // Get the key
     let key = use_state(|| <Option<String>>::None);
 
-    /// Function change the key on input from the form
+    // Change the key on input from the form
     let change_key = {
         let key = key.clone();
         Callback::from(move |e: InputEvent| {

@@ -46,8 +46,8 @@ pub fn question(question: &QuestionProps) -> Html {
     let question = &question.question;
     html! { <>
         <div class="question">
-            <span class="teller">{question.title.clone()}</span><br/>
-            <span class="teller">{question.content.clone()}</span><br/>
+            <span class="title">{question.title.clone()}</span><br/>
+            <span class="content">{question.content.clone()}</span><br/>
         </div>
         <span class="annotation">
             {format!("[id: {}", &question.id)}

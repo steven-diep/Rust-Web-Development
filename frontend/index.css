@@ -1,8 +1,8 @@
-.teller {
+.title {
     font-weight: bold;
 }
 
-.tellee {
+.content {
     font-style: italic;
 }
 
@@ -18,8 +18,13 @@ h1 {
 
 .question {
     border: 1px solid black;
+    padding: 10px;
 }
 
 .error {
     color: #881111;
+}
+
+.random {
+    margin: 20px 0;
 }
