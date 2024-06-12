@@ -64,12 +64,13 @@ async fn main() {
     // Fallback calls the error handler if the route cannot be found
     let app = Router::new()
         .route("/questions", get(get_questions))
-        .route("/questions/:id", get(get_question))
-        .route("/questions", post(add_question))
-        .route("/questions/:id", put(update_question))
-        .route("/questions/:id", delete(delete_question))
+        .route("/question/:id", get(get_question))
+        .route("/question", get(get_random_question))
+        .route("/question", post(add_question))
+        .route("/question/:id", put(update_question))
+        .route("/question/:id", delete(delete_question))
         .route("/answers", get(get_answers))
-        .route("/answers", post(add_answer))
+        .route("/answer", post(add_answer))
         .fallback(return_error)
         .layer(cors)
         // Source for trace layer code: https://github.com/tokio-rs/axum/blob/main/examples/tracing-aka-logging/src/main.rs

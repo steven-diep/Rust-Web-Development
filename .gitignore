@@ -1,2 +1,4 @@
 target/
 db/password.txt
+frontend/api-url.txt
+frontend/dist/

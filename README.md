@@ -18,14 +18,22 @@ To run this project, follow the steps below.
 git clone https://github.com/steven-diep/Rust-Web-Development.git
 ```
 
-2. Create a file named `password.txt` in the `db` directory with your database password (see `password.example.txt` for reference)
+2. Create a file named `password.txt` in the `db` directory with your database password (see `password.example.txt` for reference) and a file named `api-url.txt` in the `frontend` directory with the url (see `api-url.example.txt for reference)
 
-3. To run the project:
+3. To run the backend:
 ```Bash
 docker compose up --build
 ```
 
-4. To stop the project:
+4. To stop the backend:
 ```Bash
 docker compose down
+```
+
+5. To run the frontend:
+```Bash
+cd frontend
+rustup target install wasm32-unknown-unknown
+cargo install trunk
+trunk serve
 ```
