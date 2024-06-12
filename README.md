@@ -8,6 +8,7 @@ This project currently contains a REST API implemented using Axum with the basic
 
 ## Requirements
 - Docker Desktop
+- Rust
 
 ## Installation
 To run this project, follow the steps below.
