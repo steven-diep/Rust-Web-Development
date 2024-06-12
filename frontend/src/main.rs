@@ -57,7 +57,7 @@ impl Component for App {
         let joke = &self.joke;
         html! {
         <>
-            <h1>{ "Knock-Knock" }</h1>
+            <h1>{ "Questions" }</h1>
             if let Ok(ref joke) = joke {
                 <Joke joke={joke.clone()}/>
             }
@@ -67,7 +67,7 @@ impl Component for App {
                 </div>
             }
             <div>
-                <button onclick={ctx.link().callback(|_| Msg::GetJoke(None))}>{"Tell me another!"}</button>
+                <button onclick={ctx.link().callback(|_| Msg::GetJoke(None))}>{"Get Random Question"}</button>
             </div>
             <Finder on_find={ctx.link().callback(Msg::GetJoke)}/>
         </>
